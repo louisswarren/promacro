@@ -49,7 +49,7 @@ send_turbo_button(int fd, int pos)
 int
 main(void)
 {
-	int turbo = 0;
+	int turbo_x = 0, turbo_y = 0;
 
 	unsigned char event[8] = {0};
 
@@ -81,7 +81,7 @@ main(void)
 
 	while (1) {
 		int ready = 0;
-		while (turbo && !ready) {
+		while ((turbo_x || turbo_y) && !ready) {
 			/* Poll for event */
 			ready = poll(&joyinput, 1, 16);
 			/* Toggle the turbo button */
@@ -105,13 +105,22 @@ main(void)
 				send_event(uinput_fd, &ev_space_up);
 			break;
 		case 0x203:
+			if (axis > -0x4000 && axis <= 0x4000) {
+				turbo_x = 0;
+			} else {
+				turbo_x = 1;
+			}
+			if (!turbo_x && !turbo_y)
+				send_turbo_button(uinput_fd, 0);
+			break;
 		case 0x204:
 			if (axis > -0x4000 && axis <= 0x4000) {
-				turbo = 0;
-				send_turbo_button(uinput_fd, 0);
+				turbo_y = 0;
 			} else {
-				turbo = 1;
+				turbo_y = 1;
 			}
+			if (!turbo_x && !turbo_y)
+				send_turbo_button(uinput_fd, 0);
 			break;
 		}
 	}
