@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include <string.h>
+#include <inttypes.h>
 
 #include <fcntl.h>
 #include <linux/uinput.h>
@@ -91,26 +92,21 @@ main(void)
 			die("Read error");
 		}
 
-		uint16_t meta   = (event[4] <<  8) | event[5];
+		uint16_t meta = (event[5] <<  8) | event[4];
+		int16_t axis;
+		memcpy(&axis, &meta, 2);
 		uint16_t button = (event[6] <<  8) | event[7];
 
 		switch (button) {
 		case 0x104:
-			if (meta == 0x100)
+			if (axis)
 				send_event(uinput_fd, &ev_space_down);
 			else
 				send_event(uinput_fd, &ev_space_up);
 			break;
 		case 0x203:
-			if (meta == 0x0000) {
-				turbo = 0;
-				send_turbo_button(uinput_fd, 0);
-			} else {
-				turbo = 1;
-			}
-			break;
 		case 0x204:
-			if (meta == 0xfeff) {
+			if (axis > -0x4000 && axis <= 0x4000) {
 				turbo = 0;
 				send_turbo_button(uinput_fd, 0);
 			} else {
