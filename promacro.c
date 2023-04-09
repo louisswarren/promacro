@@ -14,7 +14,7 @@
 #define die_err(s) do { \
 		perror(s); \
 		exit(1); \
-	} while(0)
+	} while (0)
 
 void
 send_event(int fd, const struct input_event *e)
@@ -62,7 +62,7 @@ main(void)
 	/* Wait for joystick to be plugged in */
 retry:
 	printf("Waiting for joystick ...\n");
-	while(1) {
+	while (1) {
 		joyinput.fd = open("/dev/input/js0", O_RDONLY);
 		if (joyinput.fd >= 0)
 			break;
