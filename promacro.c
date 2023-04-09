@@ -11,9 +11,8 @@
 #include <poll.h>
 #include <unistd.h>
 
-#define die(...) do { \
-		fprintf(stderr, __VA_ARGS__); \
-		fprintf(stderr, "\n"); \
+#define die_err(s) do { \
+		perror(s); \
 		exit(1); \
 	} while(0)
 
@@ -43,7 +42,7 @@ main(void)
 
 	int uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 	if (uinput_fd < 0) {
-		die("Could not open /dev/uinput");
+		die_err("Could not open /dev/uinput");
 	}
 
 	static struct input_event
@@ -55,11 +54,12 @@ main(void)
 	 || 0 > ioctl(uinput_fd, UI_SET_KEYBIT, b_x.code)
 	 || 0 > ioctl(uinput_fd, UI_DEV_SETUP, &st)
 	 || 0 > ioctl(uinput_fd, UI_DEV_CREATE)) {
-		die("Failed to setup uinput (ioctl failed)");
+		die_err("Failed to setup uinput (ioctl failed)");
 	}
 
-	/* Wait for joystick to be plugged in */
 	struct pollfd joyinput = {.events = POLLIN, .fd = -1};
+
+	/* Wait for joystick to be plugged in */
 retry:
 	printf("Waiting for joystick ...\n");
 	while(1) {
