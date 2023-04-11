@@ -1,20 +1,11 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-#include <string.h>
-#include <inttypes.h>
 #include <errno.h>
-
 #include <fcntl.h>
 #include <linux/uinput.h>
 #include <poll.h>
 #include <unistd.h>
-
-#define die_err(s) do { \
-		perror(s); \
-		exit(1); \
-	} while (0)
 
 void
 send_event(int fd, const struct input_event *e)
@@ -42,7 +33,8 @@ main(void)
 
 	int uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 	if (uinput_fd < 0) {
-		die_err("Could not open /dev/uinput");
+		perror("Could not open /dev/uinput");
+		return 1;
 	}
 
 	static struct input_event
@@ -54,7 +46,8 @@ main(void)
 	 || 0 > ioctl(uinput_fd, UI_SET_KEYBIT, b_x.code)
 	 || 0 > ioctl(uinput_fd, UI_DEV_SETUP, &st)
 	 || 0 > ioctl(uinput_fd, UI_DEV_CREATE)) {
-		die_err("Failed to setup uinput (ioctl failed)");
+		perror("Failed to setup uinput (ioctl failed)");
+		return 1;
 	}
 
 	struct pollfd joyinput = {.events = POLLIN, .fd = -1};
@@ -68,7 +61,7 @@ retry:
 			break;
 		if (errno != ENOENT) {
 			perror("Failed to open /dev/input/js0");
-			exit(1);
+			return 1;
 		}
 		sleep(1);
 	}
@@ -89,14 +82,12 @@ retry:
 			if (errno == ENODEV)
 				goto retry;
 			perror("Read error");
-			exit(1);
+			return 1;
 		}
 
 		uint16_t meta = (event[5] << 8) | event[4];
 		int16_t axis = meta >= 0x8000 ? (int32_t)meta - 0x10000l : meta;
 		uint16_t button = (event[6] <<  8) | event[7];
-
-		//printf("%04x\n", button);
 
 		switch (button) {
 		case 0x104:
