@@ -38,7 +38,7 @@ main(void)
 		.id.bustype = BUS_USB,
 		/* My initials - doesn't matter */
 		.id.vendor = 0x4C53,
-		.id.product = 0x5357};
+		.id.product = 0x5757};
 
 	int uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 	if (uinput_fd < 0) {
