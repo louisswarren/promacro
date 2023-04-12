@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <stdio.h>
 
 #include <errno.h>
@@ -54,7 +53,7 @@ main(void)
 
 	/* Wait for joystick to be plugged in */
 retry:
-	printf("Waiting for joystick ...\n");
+	puts("Waiting for joystick ...");
 	while (1) {
 		joyinput.fd = open("/dev/input/js0", O_RDONLY);
 		if (joyinput.fd >= 0)
@@ -65,7 +64,7 @@ retry:
 		}
 		sleep(1);
 	}
-	printf("Ready.\n");
+	puts("Ready.");
 
 	while (1) {
 		int ready = 0;
@@ -85,9 +84,9 @@ retry:
 			return 1;
 		}
 
-		uint16_t meta = (event[5] << 8) | event[4];
-		int16_t axis = meta >= 0x8000 ? (int32_t)meta - 0x10000l : meta;
-		uint16_t button = (event[6] <<  8) | event[7];
+		long meta = (event[5] << 8) | event[4];
+		long axis = meta >= 0x8000 ? meta - 0x10000l : meta;
+		long button = (event[6] << 8) | event[7];
 
 		switch (button) {
 		case 0x104:
