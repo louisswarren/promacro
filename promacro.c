@@ -51,8 +51,8 @@ main(void)
 
 	struct pollfd joyinput = {.events = POLLIN, .fd = -1};
 
-	/* Wait for joystick to be plugged in */
 retry:
+	/* Wait for joystick to be plugged in */
 	puts("Waiting for joystick ...");
 	while (1) {
 		joyinput.fd = open("/dev/input/js0", O_RDONLY);
@@ -70,7 +70,7 @@ retry:
 		int ready = 0;
 		while ((turbo_x || turbo_y) && !ready) {
 			/* Poll for event */
-			ready = poll(&joyinput, 1, 16);
+			ready = poll(&joyinput, 1, 1000 / 30);
 			/* Toggle the turbo button */
 			b_x.value ^= 1;
 			send_event(uinput_fd, &b_x);
@@ -84,37 +84,32 @@ retry:
 			return 1;
 		}
 
-		long meta = (event[5] << 8) | event[4];
-		long axis = meta >= 0x8000 ? meta - 0x10000l : meta;
-		long button = (event[6] << 8) | event[7];
+		/* 16 bit unsigned big-endian */
+		unsigned button = (event[6] << 8) | event[7];
+
+		/* 16 bit two's complement little-endian */
+		long axis = (event[5] << 8) | event[4];
+		if (axis >= 0x8000)
+			axis -= 0x10000l;
 
 		switch (button) {
 		case 0x104:
 			b_space.value = !!axis;
 			send_event(uinput_fd, &b_space);
+			continue;
 			break;
 		case 0x203:
-			if (axis > -0x4000 && axis <= 0x4000) {
-				turbo_x = 0;
-			} else {
-				turbo_x = 1;
-			}
-			if (!turbo_x && !turbo_y) {
-				b_x.value = 0;
-				send_event(uinput_fd, &b_x);
-			}
+			turbo_x = axis <= -0x4000 || axis > 0x4000;
 			break;
 		case 0x204:
-			if (axis > -0x4000 && axis <= 0x4000) {
-				turbo_y = 0;
-			} else {
-				turbo_y = 1;
-			}
-			if (!turbo_x && !turbo_y) {
-				b_x.value = 0;
-				send_event(uinput_fd, &b_x);
-			}
+			turbo_y = axis <= -0x4000 || axis > 0x4000;
 			break;
+		default:
+			continue;
+		}
+		if (!turbo_x && !turbo_y) {
+			b_x.value = 0;
+			send_event(uinput_fd, &b_x);
 		}
 	}
 
