@@ -14,10 +14,7 @@
  * states, close emulator etc) which is completely useless for me.
  *
  * My solution: make button 0x108 (left stick) press the 'l' keyboard key.
- *
- * Never mind, that doesn't work, because you have to press the hotkey-enable
- * button even on keyboard :(
- * This is still useful as an example of how simple things can be though.
+ * Unmap the "hotkey enable" keyboard key (as opposed to gamepad button).
  *
  */
 
